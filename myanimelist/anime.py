@@ -61,17 +61,11 @@ class Anime(media.Media):
 
     :raises: :class:`.InvalidAnimeError`, :class:`.MalformedAnimePageError`
     """
-    # if MAL says the series doesn't exist, raise an InvalidAnimeError.
-    error_tag = anime_page.find(u'div', {'class': 'badresult'})
-    if error_tag:
-        raise InvalidAnimeError(self.id)
 
-    title_tag = anime_page.find(u'div', {'id': 'contentWrapper'}).find(u'h1')
-    if not title_tag.find(u'div'):
-      # otherwise, raise a MalformedAnimePageError.
-      raise MalformedAnimePageError(self.id, anime_page, message="Could not find title div")
-
-    anime_info = super(Anime, self).parse_sidebar(anime_page)
+    try:
+        anime_info = super(Anime, self).parse_sidebar(anime_page)
+    except media.InvalidMediaError as e:
+        raise InvalidAnimeError(e.id)
     info_panel_first = anime_page.find(u'div', {'id': 'content'}).find(u'table').find(u'td')
 
     try:
@@ -111,16 +105,14 @@ class Anime(media.Media):
     try:
       producers_tag = info_panel_first.find(text=u'Producers:').parent.parent
       utilities.extract_tags(producers_tag.find_all(u'span', {'class': 'dark_text'}))
-      utilities.extract_tags(producers_tag.find_all(u'sup'))
       anime_info[u'producers'] = []
       for producer_link in producers_tag.find_all('a'):
         if producer_link.text == u'add some':
           # MAL is saying "None found, add some".
           break
-        link_parts = producer_link.get('href').split('p=')
-        # of the form: /anime.php?p=14
-        if len(link_parts) > 1:
-          anime_info[u'producers'].append(self.session.producer(int(link_parts[1])).set({'name': producer_link.text}))
+        link_parts = producer_link.get('href').split('/')
+        # of the form: /anime/producer/23/Bandai_Visual
+        anime_info[u'producers'].append(self.session.producer(int(link_parts[3])).set({'name': producer_link.text}))
     except:
       if not self.session.suppress_parse_exceptions:
         raise
@@ -219,7 +211,7 @@ class Anime(media.Media):
       anime_info[u'staff'] = {}
       if staff_title:
         staff_title = staff_title[0]
-        staff_table = staff_title.nextSibling.nextSibling
+        staff_table = staff_title.nextSibling
         for row in staff_table.find_all(u'tr'):
           # staff info in second col.
           info = row.find_all(u'td')[1]

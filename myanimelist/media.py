@@ -115,20 +115,15 @@ class Media(Base):
     media_info = {}
 
     # if MAL says the series doesn't exist, raise an InvalidMediaError.
-    error_tag = media_page.find(u'div', {'class': 'badresult'})
+    error_tag = media_page.find(u'div', {'class': 'error404'})
     if error_tag:
         raise InvalidMediaError(self.id)
 
     try:
-      title_tag = media_page.find(u'div', {'id': 'contentWrapper'}).find(u'h1')
-      if not title_tag.find(u'div'):
+      title_tag = media_page.find(u'div', {'id': 'contentWrapper'}).find(u'h1').find(u'span')
+      if not title_tag:
         # otherwise, raise a MalformedMediaPageError.
-        raise MalformedMediaPageError(self.id, media_page, message="Could not find title div")
-    except:
-      if not self.session.suppress_parse_exceptions:
-        raise
-
-    try:
+        raise MalformedMediaPageError(self.id, media_page, message="Could not find title span")
       utilities.extract_tags(title_tag.find_all())
       media_info[u'title'] = title_tag.text.strip()
     except:
@@ -136,6 +131,8 @@ class Media(Base):
         raise
 
     info_panel_first = media_page.find(u'div', {'id': 'content'}).find(u'table').find(u'td')
+    # remove user-controls
+    info_panel_first.find(id='addtolist').extract()
 
     try:
       picture_tag = info_panel_first.find(u'img')
@@ -182,12 +179,11 @@ class Media(Base):
 
     try:
       genres_tag = info_panel_first.find(text=u'Genres:').parent.parent
-      utilities.extract_tags(genres_tag.find_all(u'span', {'class': 'dark_text'}))
       media_info[u'genres'] = []
       for genre_link in genres_tag.find_all('a'):
-        link_parts = genre_link.get('href').split('[]=')
-        # of the form /anime|manga.php?genre[]=1
-        genre = self.session.genre(int(link_parts[1])).set({'name': genre_link.text})
+        link_parts = genre_link.get('href').split('/')
+        # 2017-02-19: of the form /anime/genre/4/Comedy
+        genre = self.session.genre(int(link_parts[3])).set({'name': genre_link.text})
         media_info[u'genres'].append(genre)
     except:
       if not self.session.suppress_parse_exceptions:
@@ -197,10 +193,9 @@ class Media(Base):
       # grab statistics for this media.
       score_tag = info_panel_first.find(text=u'Score:').parent.parent
       # get score and number of users.
-      users_node = [x for x in score_tag.find_all(u'small') if u'scored by' in x.text][0]
-      num_users = int(users_node.text.split(u'scored by ')[-1].split(u' users')[0])
-      utilities.extract_tags(score_tag.find_all())
-      media_info[u'score'] = (decimal.Decimal(score_tag.text.strip()), num_users)
+      score = score_tag.find(attrs={'itemprop': 'ratingValue'}).text
+      num_users = int(score_tag.find(attrs={'itemprop': 'ratingCount'}).text.replace(',',''))
+      media_info[u'score'] = (decimal.Decimal(score), num_users)
     except:
       if not self.session.suppress_parse_exceptions:
         raise
@@ -237,18 +232,8 @@ class Media(Base):
       if not self.session.suppress_parse_exceptions:
         raise
 
-    try:
-      # get popular tags.
-      tags_header = media_page.find(u'h2', text=u'Popular Tags')
-      tags_tag = tags_header.find_next_sibling(u'span')
-      media_info[u'popular_tags'] = {}
-      for tag_link in tags_tag.find_all('a'):
-        tag = self.session.tag(tag_link.text)
-        num_people = int(re.match(r'(?P<people>[0-9]+) people', tag_link.get('title')).group('people'))
-        media_info[u'popular_tags'][tag] = num_people
-    except:
-      if not self.session.suppress_parse_exceptions:
-        raise
+    # TODO: popular tags no longer exist in MAL, the API should be updated to reflect that
+    media_info[u'popular_tags'] = {}
 
     return media_info
 
@@ -265,50 +250,40 @@ class Media(Base):
     media_info = self.parse_sidebar(media_page)
 
     try:
-      synopsis_elt = media_page.find(u'h2', text=u'Synopsis').parent
-      utilities.extract_tags(synopsis_elt.find_all(u'h2'))
-      media_info[u'synopsis'] = synopsis_elt.text.strip()
+      synopsis_tag = media_page.find(u'span', {'itemprop':'description'})
+      utilities.extract_tags([synopsis_tag])
+      media_info[u'synopsis'] = synopsis_tag.text.strip()
     except:
       if not self.session.suppress_parse_exceptions:
         raise
 
     try:
-      related_title = media_page.find(u'h2', text=u'Related ' + self.__class__.__name__)
+      related_title = media_page.find(text=re.compile(u'Related ' + self.__class__.__name__))
       if related_title:
-        related_elt = related_title.parent
-        utilities.extract_tags(related_elt.find_all(u'h2'))
+        related_table = related_title.parent.next_sibling
+        utilities.extract_tags([related_table])
         related = {}
-        for link in related_elt.find_all(u'a'):
-          href = link.get(u'href').replace(u'http://myanimelist.net', '')
-          if not re.match(r'/(anime|manga)', href):
-            break
-          curr_elt = link.previous_sibling
-          if curr_elt is None:
-            # we've reached the end of the list.
-            break
-          related_type = None
-          while True:
-            if not curr_elt:
-              raise MalformedAnimePageError(self.id, related_elt, message="Prematurely reached end of related anime listing")
-            if isinstance(curr_elt, bs4.NavigableString):
-              type_match = re.match(u'(?P<type>[a-zA-Z\ \-]+):', curr_elt)
-              if type_match:
-                related_type = type_match.group(u'type')
-                break
-            curr_elt = curr_elt.previous_sibling
-          title = link.text
-          # parse link: may be manga or anime.
-          href_parts = href.split(u'/')
-          # sometimes links on MAL are broken, of the form /anime//
-          if href_parts[2] == '':
-            continue
-          # of the form: /(anime|manga)/1/Cowboy_Bebop
-          obj_id = int(href_parts[2])
-          new_obj = getattr(self.session, href_parts[1])(obj_id).set({'title': title})
-          if related_type not in related:
-            related[related_type] = [new_obj]
-          else:
+
+        # extract each related category
+        for row in related_table.find_all('tr'):
+          related_type = row.find('td').text.strip(':')
+          related[related_type] = []
+          # extract each title in the category
+          for link in row.find_all('a'):
+            href = link.get(u'href').replace(u'http://myanimelist.net', '')
+            if not re.match(r'/(anime|manga)', href):
+              break
+            title = link.text
+            # parse link: may be manga or anime.
+            href_parts = href.split(u'/')
+            # sometimes links on MAL are broken, of the form /anime//
+            if href_parts[2] == '':
+              continue
+            # of the form: /(anime|manga)/1/Cowboy_Bebop
+            obj_id = int(href_parts[2])
+            new_obj = getattr(self.session, href_parts[1])(obj_id).set({'title': title})
             related[related_type].append(new_obj)
+
         media_info[u'related'] = related
       else:
         media_info[u'related'] = None
