@@ -233,7 +233,7 @@ class MediaList(Base, collections.Mapping):
       raise MalformedMediaListPageError(self.username, xml, message="Could not find root XML element in " + self.type + " list")
 
     bad_username_elt = list_page.find('error')
-    if bad_username_elt:
+    if bad_username_elt or not list(primary_elt.children):
       raise InvalidMediaListError(self.username, message=u"Invalid username when fetching " + self.type + " list")
 
     stats_elt = list_page.find('myinfo')

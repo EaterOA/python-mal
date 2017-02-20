@@ -24,9 +24,9 @@ class testAnimeListClass(object):
     self.dmc = self.session.anime(3702)
 
     self.mona = self.session.anime_list(u'monausicaa')
-    self.zombie = self.session.anime(3354)
+    self.fmp = self.session.anime(71)
     self.lollipop = self.session.anime(1509)
-    self.musume = self.session.anime(5246)
+    self.yamato = self.session.anime(4773)
 
     self.threger = self.session.anime_list(u'threger')
 
@@ -66,18 +66,18 @@ class testAnimeListClass(object):
     assert self.pl[self.baccano][u'finished'] == datetime.date(year=2009, month=7, day=28) and self.pl[self.pokemon][u'finished'] == None and self.pl[self.dmc][u'finished'] == None
 
     assert isinstance(self.mona.list, dict) and len(self.mona) >= 1822
-    assert self.zombie in self.mona and self.lollipop in self.mona and self.musume in self.mona
-    assert self.mona[self.zombie][u'status'] == u'Completed' and self.mona[self.lollipop][u'status'] == u'On-Hold' and self.mona[self.musume][u'status'] == u'Plan to Watch'
-    assert self.mona[self.zombie][u'score'] == 7 and self.mona[self.lollipop][u'score'] == None and self.mona[self.musume][u'score'] == None
-    assert self.mona[self.zombie][u'episodes_watched'] == 2 and self.mona[self.lollipop][u'episodes_watched'] == 12 and self.mona[self.musume][u'episodes_watched'] == 0
-    assert self.mona[self.zombie][u'started'] == None and self.mona[self.lollipop][u'started'] == datetime.date(year=2013, month=4, day=14) and self.mona[self.musume][u'started'] == None
-    assert self.mona[self.zombie][u'finished'] == None and self.mona[self.lollipop][u'finished'] == None and self.mona[self.musume][u'finished'] == None
+    assert self.fmp in self.mona and self.lollipop in self.mona and self.yamato in self.mona
+    assert self.mona[self.fmp][u'status'] == u'Completed' and self.mona[self.lollipop][u'status'] == u'On-Hold' and self.mona[self.yamato][u'status'] == u'Plan to Watch'
+    assert self.mona[self.fmp][u'score'] == 8 and self.mona[self.lollipop][u'score'] == None and self.mona[self.yamato][u'score'] == None
+    assert self.mona[self.fmp][u'episodes_watched'] == 24 and self.mona[self.lollipop][u'episodes_watched'] == 12 and self.mona[self.yamato][u'episodes_watched'] == 0
+    assert self.mona[self.fmp][u'started'] == None and self.mona[self.lollipop][u'started'] == datetime.date(year=2013, month=4, day=14) and self.mona[self.yamato][u'started'] == None
+    assert self.mona[self.fmp][u'finished'] == None and self.mona[self.lollipop][u'finished'] == None and self.mona[self.yamato][u'finished'] == None
 
     assert isinstance(self.threger.list, dict) and len(self.threger) == 0
 
   def testStats(self):
     assert isinstance(self.shal.stats, dict) and len(self.shal.stats) > 0
-    assert self.shal.stats[u'watching'] == 10 and self.shal.stats[u'completed'] == 102 and self.shal.stats[u'on_hold'] == 1 and self.shal.stats[u'dropped'] == 5 and self.shal.stats[u'plan_to_watch'] == 28 and float(self.shal.stats[u'days_spent']) == 38.88
+    assert self.shal.stats[u'watching'] >= 10 and self.shal.stats[u'completed'] >= 102 and self.shal.stats[u'on_hold'] >= 0 and self.shal.stats[u'dropped'] >= 5 and self.shal.stats[u'plan_to_watch'] >= 0 and float(self.shal.stats[u'days_spent']) >= 38.88
 
     assert isinstance(self.pl.stats, dict) and len(self.pl.stats) > 0
     assert self.pl.stats[u'watching'] >= 0 and self.pl.stats[u'completed'] >= 355 and self.pl.stats[u'on_hold'] >= 0 and self.pl.stats[u'dropped'] >= 385 and self.pl.stats[u'plan_to_watch'] >= 0 and float(self.pl.stats[u'days_spent']) >= 125.91
@@ -91,5 +91,5 @@ class testAnimeListClass(object):
   def testSection(self):
     assert isinstance(self.shal.section(u'Watching'), dict) and self.fz in self.shal.section(u'Watching')
     assert isinstance(self.pl.section(u'Completed'), dict) and self.baccano in self.pl.section(u'Completed')
-    assert isinstance(self.mona.section(u'Plan to Watch'), dict) and self.musume in self.mona.section(u'Plan to Watch')
+    assert isinstance(self.mona.section(u'Plan to Watch'), dict) and self.yamato in self.mona.section(u'Plan to Watch')
     assert isinstance(self.threger.section(u'Watching'), dict) and len(self.threger.section(u'Watching')) == 0
