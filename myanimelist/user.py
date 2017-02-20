@@ -246,6 +246,8 @@ class User(Base):
         if not self.session.suppress_parse_exceptions:
           raise
 
+    stats_tag = user_page.find(id='statistics')
+
     try:
       # last list updates.
       list_updates_header = filter(lambda x: u'Last List Updates' in x.text, section_headings)
@@ -285,52 +287,48 @@ class User(Base):
       if not self.session.suppress_parse_exceptions:
         raise
 
-    lower_section_headings = user_page.find_all(u'h2')
     # anime stats.
     try:
-      anime_stats_header = filter(lambda x: u'Anime Stats' in x.text, lower_section_headings)
-      if anime_stats_header:
-        anime_stats_header = anime_stats_header[0]
-        anime_stats_table = anime_stats_header.findNext(u'table')
-        if anime_stats_table:
-          user_info[u'anime_stats'] = {}
-          for row in anime_stats_table.find_all(u'tr'):
-            cols = row.find_all(u'td')
-            value = cols[1].text
-            if cols[1].find(u'span', {u'title': u'Days'}):
-              value = round(float(value), 1)
-            else:
-              value = int(value)
-            user_info[u'anime_stats'][cols[0].text] = value
+      anime_stats_header = stats_tag.find(u'div', {u'class': u'stats anime'})
+      stats = user_info['anime_stats'] = {}
+      stats['Days'] = float(anime_stats_header.find(text=re.compile('Days')).parent.nextSibling)
+      stats['Mean Score'] = float(anime_stats_header.find(text=re.compile('Mean Score')).parent.nextSibling)
+      stats_tables = anime_stats_header.find_all(u'ul')
+      # watching, completed, etc
+      for metric in stats_tables[0].find_all(u'li'):
+        stats[metric.find(u'a').text] = int(metric.find(u'span').text.replace(',',''))
+      # total entries, rewatched, etc
+      for metric in stats_tables[1].find_all(u'li'):
+        parts = metric.find_all(u'span')
+        stats[parts[0].text] = int(parts[1].text.replace(',',''))
+    except:
+      if not self.session.suppress_parse_exceptions:
+        raise
+
+    # manga stats.
+    try:
+      manga_stats_header = stats_tag.find(u'div', {u'class': u'stats manga'})
+      stats = user_info['manga_stats'] = {}
+      stats['Days'] = float(manga_stats_header.find(text=re.compile('Days')).parent.nextSibling)
+      stats['Mean Score'] = float(manga_stats_header.find(text=re.compile('Mean Score')).parent.nextSibling)
+      stats_tables = manga_stats_header.find_all(u'ul')
+      # reading, completed, etc
+      for metric in stats_tables[0].find_all(u'li'):
+        stats[metric.find(u'a').text] = int(metric.find(u'span').text.replace(',',''))
+      # total entries, reread, etc
+      for metric in stats_tables[1].find_all(u'li'):
+        parts = metric.find_all(u'span')
+        stats[parts[0].text] = int(parts[1].text.replace(',',''))
     except:
       if not self.session.suppress_parse_exceptions:
         raise
 
     try:
-      # manga stats.
-      manga_stats_header = filter(lambda x: u'Manga Stats' in x.text, lower_section_headings)
-      if manga_stats_header:
-        manga_stats_header = manga_stats_header[0]
-        manga_stats_table = manga_stats_header.findNext(u'table')
-        if manga_stats_table:
-          user_info[u'manga_stats'] = {}
-          for row in manga_stats_table.find_all(u'tr'):
-            cols = row.find_all(u'td')
-            value = cols[1].text
-            if cols[1].find(u'span', {u'title': u'Days'}):
-              value = round(float(value), 1)
-            else:
-              value = int(value)
-            user_info[u'manga_stats'][cols[0].text] = value
-    except:
-      if not self.session.suppress_parse_exceptions:
-        raise
-
-    try:
-      about_header = filter(lambda x: u'About' in x.text, section_headings)
-      if about_header:
-        about_header = about_header[0]
-        user_info[u'about'] = about_header.findNext(u'div').text.strip()
+      about_header = user_page.find(u'div', {u'class': u'profile-about-user'})
+      if not about_header:
+        user_info[u'about'] = u''
+      else:
+        user_info[u'about'] = about_header.find(u'div').text.strip()
     except:
       if not self.session.suppress_parse_exceptions:
         raise

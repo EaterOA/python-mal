@@ -136,21 +136,20 @@ class testUserClass(object):
 
   def testAnimeStats(self):
     assert isinstance(self.shal.anime_stats, dict) and len(self.shal.anime_stats) > 0
-    assert self.shal.anime_stats[u'Time (Days)'] == 38.9 and self.shal.anime_stats[u'Total Entries'] == 146
+    assert self.shal.anime_stats[u'Days'] >= 0.0 and self.shal.anime_stats[u'Total Entries'] >= 146
     assert isinstance(self.mona.anime_stats, dict) and len(self.mona.anime_stats) > 0
-    assert self.mona.anime_stats[u'Time (Days)'] >= 470 and self.mona.anime_stats[u'Total Entries'] >= 1822
+    assert self.mona.anime_stats[u'Days'] >= 470 and self.mona.anime_stats[u'Total Entries'] >= 1822
 
   def testMangaStats(self):
     assert isinstance(self.shal.manga_stats, dict) and len(self.shal.manga_stats) > 0
-    assert self.shal.manga_stats[u'Time (Days)'] == 1.0 and self.shal.manga_stats[u'Total Entries'] == 2
+    assert self.shal.manga_stats[u'Days'] >= 1.0 and self.shal.manga_stats[u'Total Entries'] >= 2
     assert isinstance(self.mona.manga_stats, dict) and len(self.mona.manga_stats) > 0
-    assert self.mona.manga_stats[u'Time (Days)'] >= 69.4 and self.mona.manga_stats[u'Total Entries'] >= 186
+    assert self.mona.manga_stats[u'Days'] >= 69.4 and self.mona.manga_stats[u'Total Entries'] >= 186
 
   def testAbout(self):
     assert isinstance(self.shal.about, unicode) and len(self.shal.about) > 0
     assert u'retiree' in self.shal.about
-    assert isinstance(self.mona.about, unicode) and len(self.mona.about) > 0
-    assert self.mona.about == u'Nothing yet'
+    assert isinstance(self.mona.about, unicode) and len(self.mona.about) == 0
 
   def testReviews(self):
     assert isinstance(self.shal.reviews, dict) and len(self.shal.reviews) == 0
