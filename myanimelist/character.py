@@ -43,7 +43,6 @@ class Character(Base):
     self._animeography = None
     self._mangaography = None
     self._num_favorites = None
-    self._favorites = None
     self._picture = None
     self._pictures = None
     self._clubs = None
@@ -125,7 +124,7 @@ class Character(Base):
 
     try:
       num_favorites_node = info_panel_first.find(text=re.compile(u'Member Favorites: '))
-      character_info[u'num_favorites'] = int(num_favorites_node.strip().split(u': ')[1])
+      character_info[u'num_favorites'] = int(num_favorites_node.strip().split(u': ')[1].replace(',',''))
     except:
       if not self.session.suppress_parse_exceptions:
         raise
@@ -198,31 +197,6 @@ class Character(Base):
 
     return character_info
 
-  def parse_favorites(self, favorites_page):
-    """Parses the DOM and returns character favorites attributes.
-
-    :type favorites_page: :class:`bs4.BeautifulSoup`
-    :param favorites_page: MAL character favorites page's DOM
-
-    :rtype: dict
-    :return: Character favorites attributes.
-
-    """
-    character_info = self.parse_sidebar(favorites_page)
-    second_col = favorites_page.find(u'div', {'id': 'content'}).find(u'table').find(u'tr').find_all(u'td', recursive=False)[1]
-
-    try:
-      character_info[u'favorites'] = []
-      favorite_links = second_col.find_all('a', recursive=False)
-      for link in favorite_links:
-        # of the form /profile/shaldengeki
-        character_info[u'favorites'].append(self.session.user(username=link.text))
-    except:
-      if not self.session.suppress_parse_exceptions:
-        raise
-
-    return character_info
-
   def parse_pictures(self, picture_page):
     """Parses the DOM and returns character pictures attributes.
 
@@ -261,13 +235,15 @@ class Character(Base):
     second_col = clubs_page.find(u'div', {'id': 'content'}).find(u'table').find(u'tr').find_all(u'td', recursive=False)[1]
 
     try:
-      clubs_header = second_col.find(u'div', text=u'Related Clubs')
+      clubs_header = second_col.find(u'h2', text=u'Related Clubs')
       character_info[u'clubs'] = []
       if clubs_header:
         curr_elt = clubs_header.nextSibling
         while curr_elt is not None:
           if curr_elt.name == u'div':
             link = curr_elt.find(u'a')
+            if not link:
+                break
             club_id = int(re.match(r'/clubs\.php\?cid=(?P<id>[0-9]+)', link.get(u'href')).group(u'id'))
             num_members = int(re.match(r'(?P<num>[0-9]+) members', curr_elt.find(u'small').text).group(u'num'))
             character_info[u'clubs'].append(self.session.club(club_id).set({'name': link.text, 'num_members': num_members}))
@@ -287,17 +263,6 @@ class Character(Base):
     """
     character = self.session.session.get(u'http://myanimelist.net/character/' + str(self.id)).text
     self.set(self.parse(utilities.get_clean_dom(character)))
-    return self
-
-  def load_favorites(self):
-    """Fetches the MAL character favorites page and sets the current character's favorites attributes.
-
-    :rtype: :class:`.Character`
-    :return: Current character object.
-
-    """
-    character = self.session.session.get(u'http://myanimelist.net/character/' + str(self.id) + u'/' + utilities.urlencode(self.name) + u'/favorites').text
-    self.set(self.parse_favorites(utilities.get_clean_dom(character)))
     return self
 
   def load_pictures(self):
@@ -377,13 +342,6 @@ class Character(Base):
     """Number of users who have favourited this character.
     """
     return self._num_favorites
-
-  @property
-  @loadable(u'load_favorites')
-  def favorites(self):
-    """List of users who have favourited this character.
-    """
-    return self._favorites
 
   @property
   @loadable(u'load')

@@ -61,8 +61,8 @@ class testCharacterClass(object):
     assert isinstance(self.maria.picture, unicode) and len(self.maria.picture) > 0
 
   def testPictures(self):
-    assert isinstance(self.spike.pictures, list) and len(self.spike.pictures) > 0 and all(map(lambda p: isinstance(p, unicode) and p.startswith(u'http://'), self.spike.pictures))
-    assert isinstance(self.ed.pictures, list) and len(self.ed.pictures) > 0 and all(map(lambda p: isinstance(p, unicode) and p.startswith(u'http://'), self.ed.pictures))
+    assert isinstance(self.spike.pictures, list) and len(self.spike.pictures) > 0 and all(map(lambda p: isinstance(p, unicode) and p.startswith(u'http'), self.spike.pictures))
+    assert isinstance(self.ed.pictures, list) and len(self.ed.pictures) > 0 and all(map(lambda p: isinstance(p, unicode) and p.startswith(u'http'), self.ed.pictures))
     assert isinstance(self.maria.pictures, list)
 
   def testAnimeography(self):
@@ -79,11 +79,6 @@ class testCharacterClass(object):
     assert isinstance(self.spike.num_favorites, int) and self.spike.num_favorites > 12000
     assert isinstance(self.ed.num_favorites, int) and self.ed.num_favorites > 19000
     assert isinstance(self.maria.num_favorites, int)
-
-  def testFavorites(self):
-    assert isinstance(self.spike.favorites, list) and len(self.spike.favorites) > 12000 and all(map(lambda u: isinstance(u, myanimelist.user.User), self.spike.favorites))
-    assert isinstance(self.ed.favorites, list) and len(self.ed.favorites) > 19000 and all(map(lambda u: isinstance(u, myanimelist.user.User), self.ed.favorites))
-    assert isinstance(self.maria.favorites, list)
 
   def testClubs(self):
     assert isinstance(self.spike.clubs, list) and len(self.spike.clubs) > 50 and all(map(lambda u: isinstance(u, myanimelist.club.Club), self.spike.clubs))
