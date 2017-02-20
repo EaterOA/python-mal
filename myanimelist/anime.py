@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import re
+import bs4
 
 import utilities
 import media
@@ -212,16 +213,17 @@ class Anime(media.Media):
       if staff_title:
         staff_title = staff_title[0]
         staff_table = staff_title.nextSibling
-        for row in staff_table.find_all(u'tr'):
-          # staff info in second col.
-          info = row.find_all(u'td')[1]
-          staff_link = info.find(u'a')
-          staff_name = ' '.join(reversed(staff_link.text.split(u', ')))
-          link_parts = staff_link.get(u'href').split(u'/')
-          # of the form /people/1870/Miyazaki_Hayao
-          person = self.session.person(int(link_parts[2])).set({'name': staff_name})
-          # staff role(s).
-          anime_info[u'staff'][person] = set(info.find(u'small').text.split(u', '))
+        if staff_table and isinstance(staff_table, bs4.element.Tag):
+          for row in staff_table.find_all(u'tr'):
+            # staff info in second col.
+            info = row.find_all(u'td')[1]
+            staff_link = info.find(u'a')
+            staff_name = ' '.join(reversed(staff_link.text.split(u', ')))
+            link_parts = staff_link.get(u'href').split(u'/')
+            # of the form /people/1870/Miyazaki_Hayao
+            person = self.session.person(int(link_parts[2])).set({'name': staff_name})
+            # staff role(s).
+            anime_info[u'staff'][person] = set(info.find(u'small').text.split(u', '))
     except:
       if not self.session.suppress_parse_exceptions:
         raise
