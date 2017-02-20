@@ -120,7 +120,7 @@ class Media(Base):
         raise InvalidMediaError(self.id)
 
     try:
-      title_tag = media_page.find(u'div', {'id': 'contentWrapper'}).find(u'h1').find(u'span')
+      title_tag = media_page.find(u'span', {'itemprop': 'name'})
       if not title_tag:
         # otherwise, raise a MalformedMediaPageError.
         raise MalformedMediaPageError(self.id, media_page, message="Could not find title span")
