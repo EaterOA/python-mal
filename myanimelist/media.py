@@ -131,8 +131,11 @@ class Media(Base):
         raise
 
     info_panel_first = media_page.find(u'div', {'id': 'content'}).find(u'table').find(u'td')
-    # remove user-controls
-    info_panel_first.find(id='addtolist').extract()
+
+    # remove user-controls, if exists
+    controls = info_panel_first.find(id='addtolist')
+    if controls:
+        controls.extract()
 
     try:
       picture_tag = info_panel_first.find(u'img')

@@ -56,22 +56,11 @@ class Manga(media.Media):
 
     :raises: :class:`.InvalidMangaError`, :class:`.MalformedMangaPageError`
     """
-    # if MAL says the series doesn't exist, raise an InvalidMangaError.
-    error_tag = manga_page.find(u'div', {'class': 'badresult'})
-    if error_tag:
-        raise InvalidMangaError(self.id)
 
     try:
-      title_tag = manga_page.find(u'div', {'id': 'contentWrapper'}).find(u'h1')
-      if not title_tag.find(u'div'):
-        # otherwise, raise a MalformedMangaPageError.
-        raise MalformedMangaPageError(self.id, manga_page, message="Could not find title div")
-    except:
-      if not self.session.suppress_parse_exceptions:
-        raise
-
-    # otherwise, begin parsing.
-    manga_info = super(Manga, self).parse_sidebar(manga_page)
+      manga_info = super(Manga, self).parse_sidebar(manga_page)
+    except media.InvalidMediaError as e:
+      raise InvalidMangaError(e.id)
 
     info_panel_first = manga_page.find(u'div', {'id': 'content'}).find(u'table').find(u'td')
 
@@ -140,9 +129,9 @@ class Manga(media.Media):
       publication_link = serialization_tag.find('a')
       manga_info[u'serialization'] = None
       if publication_link:
-        link_parts = publication_link.get('href').split('mid=')
-        # of the form /manga.php?mid=1
-        manga_info[u'serialization'] = self.session.publication(int(link_parts[1])).set({'name': publication_link.text})
+        link_parts = publication_link.get('href').split('/')
+        # of the form /manga/magazine/1/Big_Comic_Original
+        manga_info[u'serialization'] = self.session.publication(int(link_parts[3])).set({'name': publication_link.text})
     except:
       if not self.session.suppress_parse_exceptions:
         raise

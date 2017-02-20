@@ -23,7 +23,7 @@ class testMangaClass(object):
     self.supernatural = self.session.genre(37)
     self.supernatural_tag = self.session.tag(u'supernatural')
     self.clamp = self.session.person(1877)
-    self.bessatsu = self.session.publication(450)
+    self.young = self.session.publication(10)
     self.doumeki = self.session.character(567)
     self.holic_sequel = self.session.manga(46010)
 
@@ -90,9 +90,9 @@ class testMangaClass(object):
     assert isinstance(self.judos.picture, unicode)
 
   def testAlternativeTitles(self):
-    assert u'Japanese' in self.monster.alternative_titles and isinstance(self.monster.alternative_titles[u'Japanese'], list) and u'MONSTER モンスター' in self.monster.alternative_titles[u'Japanese']
+    assert u'Japanese' in self.monster.alternative_titles and isinstance(self.monster.alternative_titles[u'Japanese'], list) and u'MONSTER' in self.monster.alternative_titles[u'Japanese']
     assert u'Synonyms' in self.holic.alternative_titles and isinstance(self.holic.alternative_titles[u'Synonyms'], list) and u'xxxHolic Cage' in self.holic.alternative_titles[u'Synonyms']
-    assert u'Japanese' in self.naruto.alternative_titles and isinstance(self.naruto.alternative_titles[u'Japanese'], list) and u'NARUTO -ナルト-' in self.naruto.alternative_titles[u'Japanese']
+    assert u'Japanese' in self.naruto.alternative_titles and isinstance(self.naruto.alternative_titles[u'Japanese'], list) and u'NARUTO―ナルト―' in self.naruto.alternative_titles[u'Japanese']
     assert u'English' in self.tomoyo_after.alternative_titles and isinstance(self.tomoyo_after.alternative_titles[u'English'], list) and u'Tomoyo After ~Dear Shining Memories~' in self.tomoyo_after.alternative_titles[u'English']
     assert u'Synonyms' in self.judos.alternative_titles and isinstance(self.judos.alternative_titles[u'Synonyms'], list) and u'Juudouzu' in self.judos.alternative_titles[u'Synonyms']
 
@@ -113,13 +113,14 @@ class testMangaClass(object):
     assert self.monster.chapters == 162
     assert self.tomoyo_after.chapters == 4
     assert self.naruto.chapters == 700
-    assert self.judos.chapters == None
+    assert self.judos.chapters == 21
 
   def testStatus(self):
     assert self.holic.status == u'Finished'
     assert self.tomoyo_after.status == u'Finished'
     assert self.monster.status == u'Finished'
     assert self.naruto.status == u'Finished'
+    assert self.judos.status == u'Finished'
 
   def testPublished(self):
     assert self.holic.published == (datetime.date(month=2, day=24, year=2003), datetime.date(month=2, day=9, year=2011))
@@ -142,7 +143,7 @@ class testMangaClass(object):
     assert isinstance(self.judos.authors, dict) and len(self.judos.authors) > 0 and self.kondou in self.judos.authors and self.judos.authors[self.kondou] == u'Story & Art'
 
   def testSerialization(self):
-    assert isinstance(self.holic.serialization, myanimelist.publication.Publication) and self.bessatsu == self.holic.serialization
+    assert isinstance(self.holic.serialization, myanimelist.publication.Publication) and self.young == self.holic.serialization
     assert isinstance(self.tomoyo_after.serialization, myanimelist.publication.Publication) and self.dragon_age == self.tomoyo_after.serialization
     assert isinstance(self.naruto.serialization, myanimelist.publication.Publication) and self.shonen_jump_weekly == self.naruto.serialization
     assert isinstance(self.monster.serialization, myanimelist.publication.Publication) and self.original == self.monster.serialization
@@ -191,13 +192,6 @@ class testMangaClass(object):
     assert isinstance(self.naruto.favorites, int) and self.naruto.favorites > 0
     assert isinstance(self.tomoyo_after.favorites, int) and self.tomoyo_after.favorites > 0
     assert isinstance(self.judos.favorites, int) and self.judos.favorites >= 0
-
-  def testPopularTags(self):
-    assert isinstance(self.holic.popular_tags, dict) and len(self.holic.popular_tags) > 0 and self.supernatural_tag in self.holic.popular_tags and self.holic.popular_tags[self.supernatural_tag] >= 269
-    assert isinstance(self.tomoyo_after.popular_tags, dict) and len(self.tomoyo_after.popular_tags) > 0 and self.romance_tag in self.tomoyo_after.popular_tags and self.tomoyo_after.popular_tags[self.romance_tag] >= 57
-    assert isinstance(self.naruto.popular_tags, dict) and len(self.naruto.popular_tags) > 0 and self.action_tag in self.naruto.popular_tags and self.naruto.popular_tags[self.action_tag] >= 561
-    assert isinstance(self.monster.popular_tags, dict) and len(self.monster.popular_tags) > 0 and self.mystery_tag in self.monster.popular_tags and self.monster.popular_tags[self.mystery_tag] >= 105
-    assert isinstance(self.judos.popular_tags, dict) and len(self.judos.popular_tags) == 0
 
   def testSynopsis(self):
     assert isinstance(self.holic.synopsis, unicode) and len(self.holic.synopsis) > 0 and u'Watanuki' in self.holic.synopsis
