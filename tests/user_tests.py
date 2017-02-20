@@ -68,7 +68,7 @@ class testUserClass(object):
     assert self.mona.username == u'monausicaa'
 
   def testPicture(self):
-    assert isinstance(self.shal.picture, unicode) and self.shal.picture == u'http://cdn.myanimelist.net/images/userimages/64611.jpg'
+    assert isinstance(self.shal.picture, unicode) and u'/images/userimages/64611.jpg' in self.shal.picture
     assert isinstance(self.mona.picture, unicode)
   
   def testFavoriteAnime(self):
@@ -116,22 +116,9 @@ class testUserClass(object):
     assert isinstance(self.shal.join_date, datetime.date) and self.shal.join_date == datetime.date(year=2008, month=5, day=30)
     assert isinstance(self.mona.join_date, datetime.date) and self.mona.join_date == datetime.date(year=2009, month=10, day=9)
 
-  def testAccessRank(self):
-    assert self.shal.access_rank == u'Member'
-    assert self.mona.access_rank == u'Member'
-    assert self.naruleach.access_rank == u'Anime DB Moderator'
-
-  def testAnimeListViews(self):
-    assert isinstance(self.shal.anime_list_views, int) and self.shal.anime_list_views >= 1767
-    assert isinstance(self.mona.anime_list_views, int) and self.mona.anime_list_views >= 1969
-
-  def testMangaListViews(self):
-    assert isinstance(self.shal.manga_list_views, int) and self.shal.manga_list_views >= 1037
-    assert isinstance(self.mona.manga_list_views, int) and self.mona.manga_list_views >= 548
-
   def testNumComments(self):
-    assert isinstance(self.shal.num_comments, int) and self.shal.num_comments >= 93
-    assert isinstance(self.mona.num_comments, int) and self.mona.num_comments >= 30
+    assert isinstance(self.shal.num_comments, int) and self.shal.num_comments >= 0 
+    assert isinstance(self.mona.num_comments, int) and self.mona.num_comments >= 0
 
   def testNumForumPosts(self):
     assert isinstance(self.shal.num_forum_posts, int) and self.shal.num_forum_posts >= 5

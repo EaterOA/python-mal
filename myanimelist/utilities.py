@@ -127,6 +127,14 @@ def parse_profile_date(text, suppress=False):
       return datetime.datetime.strptime(text, '%b %d, %Y').date()
     except ValueError:
       pass
+    try:
+      return datetime.datetime.strptime(text, '%b %d, %Y %I:%M %p')
+    except ValueError:
+      pass
+    try:
+      return datetime.datetime.strptime(text, '%b %d, %I:%M %p')
+    except ValueError:
+      pass
     # see if it's a month/year pairing.
     return datetime.datetime.strptime(text, '%b %Y').date()
   except:
