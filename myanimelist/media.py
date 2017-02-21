@@ -197,6 +197,8 @@ class Media(Base):
       score_tag = info_panel_first.find(text=u'Score:').parent.parent
       # get score and number of users.
       score = score_tag.find(attrs={'itemprop': 'ratingValue'}).text
+      if score == u'N/A':
+        score = u'0'
       num_users = int(score_tag.find(attrs={'itemprop': 'ratingCount'}).text.replace(',',''))
       media_info[u'score'] = (decimal.Decimal(score), num_users)
     except:
@@ -206,7 +208,10 @@ class Media(Base):
     try:
       rank_tag = info_panel_first.find(text=u'Ranked:').parent.parent
       utilities.extract_tags(rank_tag.find_all())
-      media_info[u'rank'] = int(rank_tag.text.strip()[1:].replace(u',', ''))
+      rank = rank_tag.text.strip().replace(u',', '').replace(u'#', '')
+      if rank == u'N/A':
+        rank = u'0'
+      media_info[u'rank'] = int(rank)
     except:
       if not self.session.suppress_parse_exceptions:
         raise
